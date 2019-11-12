@@ -555,13 +555,12 @@ class QueryCacheTest < ActiveRecord::TestCase
 
   private
     def with_temporary_connection_pool
-      old_pool = ActiveRecord::Base.connection_handler.retrieve_connection_pool(ActiveRecord::Base.connection_specification_name)
-      new_pool = ActiveRecord::ConnectionAdapters::ConnectionPool.new ActiveRecord::Base.connection_pool.spec
-      ActiveRecord::Base.connection_handler.send(:owner_to_pool)["primary"] = new_pool
+      pool_config = ActiveRecord::Base.connection_handler.send(:owner_to_pool_manager).fetch("primary").get_pool_config(:default)
+      new_pool = ActiveRecord::ConnectionAdapters::ConnectionPool.new(pool_config)
 
-      yield
-    ensure
-      ActiveRecord::Base.connection_handler.send(:owner_to_pool)["primary"] = old_pool
+      pool_config.stub(:pool, new_pool) do
+        yield
+      end
     end
 
     def middleware(&app)
@@ -647,6 +646,40 @@ class QueryCacheExpiryTest < ActiveRecord::TestCase
       Task.cache do
         Task.create!
       end
+    end
+  end
+
+  def test_insert_all
+    skip unless supports_insert_on_duplicate_skip?
+
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.insert({ starting: Time.now }) }
+    end
+
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.insert_all([{ starting: Time.now }]) }
+    end
+  end
+
+  def test_insert_all_bang
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.insert!({ starting: Time.now }) }
+    end
+
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.insert_all!([{ starting: Time.now }]) }
+    end
+  end
+
+  def test_upsert_all
+    skip unless supports_insert_on_duplicate_update?
+
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.upsert({ starting: Time.now }) }
+    end
+
+    assert_called(ActiveRecord::Base.connection, :clear_query_cache, times: 2) do
+      Task.cache { Task.upsert_all([{ starting: Time.now }]) }
     end
   end
 

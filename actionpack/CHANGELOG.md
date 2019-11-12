@@ -1,3 +1,29 @@
+*   `process_action.action_controller` notifications now include the following in their payloads:
+
+    * `:request` - the `ActionDispatch::Request`
+    * `:location` - the `Location` response header
+
+    *George Claghorn*
+
+*   Updated `ActionDispatch::Request.remote_ip` setter to clear set the instance
+    `remote_ip` to `nil` before setting the header that the value is derived
+    from.
+
+    Fixes https://github.com/rails/rails/issues/37383
+
+    *Norm Provost*
+
+*   `ActionController::Base.log_at` allows setting a different log level per request.
+
+    ```ruby
+    # Use the debug level if a particular cookie is set.
+    class ApplicationController < ActionController::Base
+      log_at :debug, if: -> { cookies[:debug] }
+    end
+    ```
+
+    *George Claghorn*
+
 *   Allow system test screen shots to be taken more than once in
     a test by prefixing the file name with an incrementing counter.
 
@@ -37,7 +63,7 @@
 
 *   Add DSL for configuring HTTP Feature Policy
 
-    This new DSL provides a way to configure a HTTP Feature Policy at a
+    This new DSL provides a way to configure an HTTP Feature Policy at a
     global or per-controller level. Full details of HTTP Feature Policy
     specification and guidelines can be found at MDN:
 

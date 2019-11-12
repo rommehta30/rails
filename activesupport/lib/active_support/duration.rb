@@ -181,6 +181,10 @@ module ActiveSupport
       #   ActiveSupport::Duration.build(2716146).parts  # => {:months=>1, :days=>1}
       #
       def build(value)
+        unless value.is_a?(::Numeric)
+          raise TypeError, "can't build an #{self.name} from a #{value.class.name}"
+        end
+
         parts = {}
         remainder = value.to_f
 
@@ -337,8 +341,8 @@ module ActiveSupport
     #   1.year.to_i     # => 31556952
     #
     # In such cases, Ruby's core
-    # Date[http://ruby-doc.org/stdlib/libdoc/date/rdoc/Date.html] and
-    # Time[http://ruby-doc.org/stdlib/libdoc/time/rdoc/Time.html] should be used for precision
+    # Date[https://ruby-doc.org/stdlib/libdoc/date/rdoc/Date.html] and
+    # Time[https://ruby-doc.org/stdlib/libdoc/time/rdoc/Time.html] should be used for precision
     # date and time arithmetic.
     def to_i
       @value.to_i

@@ -8,6 +8,7 @@ AllCops:
   # to ignore them, so only the ones explicitly set in this file are enabled.
   DisabledByDefault: true
   Exclude:
+    - '**/tmp/**/*'
     - '**/templates/**/*'
     - '**/vendor/**/*'
     - 'actionpack/lib/action_dispatch/journey/parser.rb'
@@ -33,12 +34,6 @@ Rails/RefuteMethods:
 # Prefer &&/|| over and/or.
 Style/AndOr:
   Enabled: true
-
-# Do not use braces for hash literals when they are the last argument of a
-# method call.
-Style/BracesAroundHashParameters:
-  Enabled: true
-  EnforcedStyle: context_dependent
 
 # Align `when` with `case`.
 Layout/CaseIndentation:
@@ -181,7 +176,7 @@ Layout/TrailingWhitespace:
   Enabled: true
 
 # Use quotes for string literals when they are enough.
-Style/UnneededPercentQ:
+Style/RedundantPercentQ:
   Enabled: true
 
 Lint/AmbiguousOperator:

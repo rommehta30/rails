@@ -20,7 +20,7 @@ After reading this guide, you will know:
 Introduction
 ------------
 
-INFO. This guide documents autoloading in `classic` mode, which is the traditional one. If you'd like to read about `zeiwerk` mode instead, the new one in Rails 6, please check [Autoloading and Reloading Constants (Zeitwerk Mode)](autoloading_and_reloading_constants.html).
+INFO. This guide documents autoloading in `classic` mode, which is the traditional one. If you'd like to read about `zeitwerk` mode instead, the new one in Rails 6, please check [Autoloading and Reloading Constants (Zeitwerk Mode)](autoloading_and_reloading_constants.html).
 
 Ruby on Rails allows applications to be written as if their code was preloaded.
 
@@ -481,8 +481,6 @@ What is described above are the defaults with a newly generated Rails app. There
 ). But using `autoload_paths` on its own  in the past (before Rails 5) developers might configure `autoload_paths` to add in extra locations (e.g. `lib` which used to be an autoload path list years ago, but no longer is).  However this is now discouraged for most purposes, as it is likely to lead to production-only errors. It is possible to add new locations to both `config.eager_load_paths` and `config.autoload_paths` but use at your own risk.
 
 See also [Autoloading in the Test Environment](#autoloading-in-the-test-environment).
-
-`config.autoload_paths` is not changeable from environment-specific configuration files.
 
 The value of `autoload_paths` can be inspected. In a just-generated application
 it is (edited):

@@ -216,6 +216,9 @@ class HasManyAssociationsTest < ActiveRecord::TestCase
 
     bulb = car.bulbs.create
     assert_equal "defaulty", bulb.name
+
+    bulb = car.bulbs.create!
+    assert_equal "defaulty", bulb.name
   end
 
   def test_build_and_create_from_association_should_respect_passed_attributes_over_default_scope
@@ -227,10 +230,38 @@ class HasManyAssociationsTest < ActiveRecord::TestCase
     bulb = car.bulbs.create(name: "exotic")
     assert_equal "exotic", bulb.name
 
+    bulb = car.bulbs.create!(name: "exotic")
+    assert_equal "exotic", bulb.name
+
     bulb = car.awesome_bulbs.build(frickinawesome: false)
     assert_equal false, bulb.frickinawesome
 
     bulb = car.awesome_bulbs.create(frickinawesome: false)
+    assert_equal false, bulb.frickinawesome
+
+    bulb = car.awesome_bulbs.create!(frickinawesome: false)
+    assert_equal false, bulb.frickinawesome
+  end
+
+  def test_build_and_create_from_association_should_respect_unscope_over_default_scope
+    car = Car.create(name: "honda")
+
+    bulb = car.bulbs.unscope(where: :name).build
+    assert_nil bulb.name
+
+    bulb = car.bulbs.unscope(where: :name).create
+    assert_nil bulb.name
+
+    bulb = car.bulbs.unscope(where: :name).create!
+    assert_nil bulb.name
+
+    bulb = car.awesome_bulbs.unscope(where: :frickinawesome).build
+    assert_equal false, bulb.frickinawesome
+
+    bulb = car.awesome_bulbs.unscope(where: :frickinawesome).create
+    assert_equal false, bulb.frickinawesome
+
+    bulb = car.awesome_bulbs.unscope(where: :frickinawesome).create!
     assert_equal false, bulb.frickinawesome
   end
 
@@ -2408,6 +2439,7 @@ class HasManyAssociationsTest < ActiveRecord::TestCase
     post.images << image
 
     assert_equal [image], post.images
+    assert_equal post, image.imageable
   end
 
   def test_build_with_polymorphic_has_many_does_not_allow_to_override_type_and_id
@@ -2499,14 +2531,37 @@ class HasManyAssociationsTest < ActiveRecord::TestCase
 
   test "first_or_initialize adds the record to the association" do
     firm = Firm.create! name: "omg"
-    client = firm.clients_of_firm.first_or_initialize
+    client = firm.clients_of_firm.where(name: "lol").first_or_initialize do
+      assert_deprecated do
+        assert_equal 0, Client.count
+      end
+    end
+    assert_equal "lol", client.name
     assert_equal [client], firm.clients_of_firm
   end
 
   test "first_or_create adds the record to the association" do
     firm = Firm.create! name: "omg"
     firm.clients_of_firm.load_target
-    client = firm.clients_of_firm.first_or_create name: "lol"
+    client = firm.clients_of_firm.where(name: "lol").first_or_create do
+      assert_deprecated do
+        assert_equal 0, Client.count
+      end
+    end
+    assert_equal "lol", client.name
+    assert_equal [client], firm.clients_of_firm
+    assert_equal [client], firm.reload.clients_of_firm
+  end
+
+  test "first_or_create! adds the record to the association" do
+    firm = Firm.create! name: "omg"
+    firm.clients_of_firm.load_target
+    client = firm.clients_of_firm.where(name: "lol").first_or_create! do
+      assert_deprecated do
+        assert_equal 0, Client.count
+      end
+    end
+    assert_equal "lol", client.name
     assert_equal [client], firm.clients_of_firm
     assert_equal [client], firm.reload.clients_of_firm
   end
@@ -2933,8 +2988,8 @@ class HasManyAssociationsTest < ActiveRecord::TestCase
   end
 
   def test_has_many_preloading_with_duplicate_records
-    posts = Post.joins(:comments).preload(:comments).to_a
-    assert_equal [1, 2], posts.first.comments.map(&:id)
+    posts = Post.joins(:comments).preload(:comments).order(:id).to_a
+    assert_equal [1, 2], posts.first.comments.map(&:id).sort
   end
 
   private

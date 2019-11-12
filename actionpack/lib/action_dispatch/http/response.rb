@@ -215,9 +215,15 @@ module ActionDispatch # :nodoc:
       end
     end
 
-    def sending?;   synchronize { @sending };   end
-    def committed?; synchronize { @committed }; end
-    def sent?;      synchronize { @sent };      end
+    if defined?(JRUBY_VERSION)
+      def sending?;   synchronize { @sending };   end
+      def committed?; synchronize { @committed }; end
+      def sent?;      synchronize { @sent };      end
+    else
+      def sending?;   @sending;   end
+      def committed?; @committed; end
+      def sent?;      @sent;      end
+    end
 
     # Sets the HTTP status code.
     def status=(status)
@@ -534,4 +540,6 @@ module ActionDispatch # :nodoc:
       end
     end
   end
+
+  ActiveSupport.run_load_hooks(:action_dispatch_response, Response)
 end

@@ -244,7 +244,7 @@ class RelationTest < ActiveRecord::TestCase
   end
 
   def test_finding_with_subquery_with_eager_loading_in_from
-    relation = Comment.includes(:post).where("posts.type": "Post")
+    relation = Comment.includes(:post).where("posts.type": "Post").order(:id)
     assert_equal relation.to_a, Comment.select("*").from(relation).to_a
     assert_equal relation.to_a, Comment.select("subquery.*").from(relation).to_a
     assert_equal relation.to_a, Comment.select("a.*").from(relation, :a).to_a
@@ -298,13 +298,13 @@ class RelationTest < ActiveRecord::TestCase
   end
 
   def test_reverse_order_with_function
-    topics = Topic.order("length(title)").reverse_order
-    assert_equal topics(:second).title, topics.first.title
+    topics = Topic.order("lower(title)").reverse_order
+    assert_equal topics(:third).title, topics.first.title
   end
 
   def test_reverse_arel_assoc_order_with_function
-    topics = Topic.order(Arel.sql("length(title)") => :asc).reverse_order
-    assert_equal topics(:second).title, topics.first.title
+    topics = Topic.order(Arel.sql("lower(title)") => :asc).reverse_order
+    assert_equal topics(:third).title, topics.first.title
   end
 
   def test_reverse_order_with_function_other_predicates
@@ -529,6 +529,14 @@ class RelationTest < ActiveRecord::TestCase
     assert_raises(ArgumentError) { Topic.preload() }
     assert_raises(ArgumentError) { Topic.group() }
     assert_raises(ArgumentError) { Topic.reorder() }
+    assert_raises(ArgumentError) { Topic.order() }
+    assert_raises(ArgumentError) { Topic.eager_load() }
+    assert_raises(ArgumentError) { Topic.reselect() }
+    assert_raises(ArgumentError) { Topic.unscope() }
+    assert_raises(ArgumentError) { Topic.joins() }
+    assert_raises(ArgumentError) { Topic.left_joins() }
+    assert_raises(ArgumentError) { Topic.optimizer_hints() }
+    assert_raises(ArgumentError) { Topic.annotate() }
   end
 
   def test_blank_like_arguments_to_query_methods_dont_raise_errors
@@ -537,6 +545,14 @@ class RelationTest < ActiveRecord::TestCase
     assert_nothing_raised { Topic.preload([]) }
     assert_nothing_raised { Topic.group([]) }
     assert_nothing_raised { Topic.reorder([]) }
+    assert_nothing_raised { Topic.order([]) }
+    assert_nothing_raised { Topic.eager_load([]) }
+    assert_nothing_raised { Topic.reselect([]) }
+    assert_nothing_raised { Topic.unscope([]) }
+    assert_nothing_raised { Topic.joins([]) }
+    assert_nothing_raised { Topic.left_joins([]) }
+    assert_nothing_raised { Topic.optimizer_hints([]) }
+    assert_nothing_raised { Topic.annotate([]) }
   end
 
   def test_respond_to_dynamic_finders
@@ -934,6 +950,10 @@ class RelationTest < ActiveRecord::TestCase
 
   def test_select_argument_error
     assert_raises(ArgumentError) { Developer.select }
+  end
+
+  def test_select_argument_error_with_block
+    assert_raises(ArgumentError) { Developer.select(:id) { |d| d.id % 2 == 0 } }
   end
 
   def test_count
@@ -2037,7 +2057,7 @@ class RelationTest < ActiveRecord::TestCase
   end
 
   def test_relation_join_method
-    assert_equal "Thank you for the welcome,Thank you again for the welcome", Post.first.comments.join(",")
+    assert_equal "Thank you for the welcome,Thank you again for the welcome", Post.first.comments.order(:id).join(",")
   end
 
   def test_relation_with_private_kernel_method

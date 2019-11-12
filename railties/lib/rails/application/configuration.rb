@@ -72,6 +72,7 @@ module Rails
         @feature_policy                          = nil
       end
 
+      # Loads default configurations. See {the result of the method for each version}[https://guides.rubyonrails.org/configuring.html#results-of-config-load-defaults].
       def load_defaults(target_version)
         case target_version.to_s
         when "5.0"
@@ -154,6 +155,10 @@ module Rails
           end
         when "6.1"
           load_defaults "6.0"
+
+          if respond_to?(:active_record)
+            active_record.has_many_inversing = true
+          end
         else
           raise "Unknown version #{target_version.to_s.inspect}"
         end

@@ -492,7 +492,7 @@ class TestRoutingMapper < ActionDispatch::IntegrationTest
       get "/projects/status(.:format)"
     end
 
-    # without dup, additional (and possibly unwanted) values will be present in the options (eg. :host)
+    # without dup, additional (and possibly unwanted) values will be present in the options (e.g. :host)
     original_options = { controller: "projects", action: "status" }
     options = original_options.dup
 
@@ -4962,7 +4962,7 @@ class TestOptionalScopesWithOrWithoutParams < ActionDispatch::IntegrationTest
     app.draw do
       scope module: "test_optional_scopes_with_or_without_params" do
         scope "(:locale)", locale: /en|es/ do
-          get "home", to: "home#index"
+          get "home", controller: :home, action: :index
           get "with_param/:foo", to: "home#with_param", as: "with_param"
           get "without_param", to: "home#without_param"
         end

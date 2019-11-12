@@ -36,7 +36,9 @@ module ActiveRecord
           [sql.freeze, binds]
         else
           visitor.preparable = false if prepared_statements
-          [arel_or_sql_string.dup.freeze, binds]
+
+          arel_or_sql_string = arel_or_sql_string.dup.freeze unless arel_or_sql_string.frozen?
+          [arel_or_sql_string, binds]
         end
       end
       private :to_sql_and_binds
@@ -149,6 +151,10 @@ module ActiveRecord
         exec_query(sql, name, binds)
       end
 
+      def exec_insert_all(sql, name) # :nodoc:
+        exec_query(sql, name)
+      end
+
       # Executes an INSERT query and returns the new record's ID
       #
       # +id_value+ will be returned unless the value is +nil+, in
@@ -182,6 +188,8 @@ module ActiveRecord
       end
 
       def truncate_tables(*table_names) # :nodoc:
+        table_names -= [schema_migration.table_name, InternalMetadata.table_name]
+
         return if table_names.empty?
 
         with_multi_statements do
@@ -204,7 +212,7 @@ module ActiveRecord
       #
       # In order to get around this problem, #transaction will emulate the effect
       # of nested transactions, by using savepoints:
-      # https://dev.mysql.com/doc/refman/5.7/en/savepoint.html
+      # https://dev.mysql.com/doc/refman/en/savepoint.html
       #
       # It is safe to call this method if a database transaction is already open,
       # i.e. if #transaction is called within another #transaction block. In case
@@ -255,7 +263,7 @@ module ActiveRecord
       # semantics of these different levels:
       #
       # * https://www.postgresql.org/docs/current/static/transaction-iso.html
-      # * https://dev.mysql.com/doc/refman/5.7/en/set-transaction.html
+      # * https://dev.mysql.com/doc/refman/en/set-transaction.html
       #
       # An ActiveRecord::TransactionIsolationError will be raised if:
       #
@@ -346,7 +354,7 @@ module ActiveRecord
       end
 
       # Inserts the given fixture into the table. Overridden in adapters that require
-      # something beyond a simple insert (eg. Oracle).
+      # something beyond a simple insert (e.g. Oracle).
       # Most of adapters should implement `insert_fixtures_set` that leverages bulk SQL insert.
       # We keep this method to provide fallback
       # for databases like sqlite that do not support bulk inserts.

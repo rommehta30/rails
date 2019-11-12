@@ -144,6 +144,10 @@ module ActiveRecord
         true
       end
 
+      def supports_common_table_expressions?
+        database_version >= "3.8.3"
+      end
+
       def supports_insert_on_conflict?
         database_version >= "3.24.0"
       end
@@ -218,8 +222,8 @@ module ActiveRecord
         pks.sort_by { |f| f["pk"] }.map { |f| f["name"] }
       end
 
-      def remove_index(table_name, options = {}) #:nodoc:
-        index_name = index_name_for_remove(table_name, options)
+      def remove_index(table_name, column_name, options = {}) #:nodoc:
+        index_name = index_name_for_remove(table_name, column_name, options)
         exec_query "DROP INDEX #{quote_column_name(index_name)}"
       end
 
@@ -234,10 +238,10 @@ module ActiveRecord
         rename_table_indexes(table_name, new_name)
       end
 
-      def add_column(table_name, column_name, type, options = {}) #:nodoc:
+      def add_column(table_name, column_name, type, **options) #:nodoc:
         if invalid_alter_table_type?(type, options)
           alter_table(table_name) do |definition|
-            definition.column(column_name, type, options)
+            definition.column(column_name, type, **options)
           end
         else
           super
@@ -366,7 +370,7 @@ module ActiveRecord
                 fk.options[:column] = column
               end
               to_table = strip_table_name_prefix_and_suffix(fk.to_table)
-              definition.foreign_key(to_table, fk.options)
+              definition.foreign_key(to_table, **fk.options)
             end
 
             yield definition if block_given?
@@ -388,7 +392,7 @@ module ActiveRecord
         def copy_table(from, to, options = {})
           from_primary_key = primary_key(from)
           options[:id] = false
-          create_table(to, options) do |definition|
+          create_table(to, **options) do |definition|
             @definition = definition
             if from_primary_key.is_a?(Array)
               @definition.primary_keys from_primary_key

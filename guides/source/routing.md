@@ -912,7 +912,7 @@ resolve("Basket") { [:basket] }
 ```
 
 ``` erb
-<%= form_for @basket do |form| %>
+<%= form_with model: @basket do |form| %>
   <!-- basket form -->
 <% end %>
 ```
@@ -955,7 +955,7 @@ resources :user_permissions, controller: 'admin/user_permissions'
 This will route to the `Admin::UserPermissions` controller.
 
 NOTE: Only the directory notation is supported. Specifying the
-controller with Ruby constant notation (eg. `controller: 'Admin::UserPermissions'`)
+controller with Ruby constant notation (e.g. `controller: 'Admin::UserPermissions'`)
 can lead to routing problems and results in
 a warning.
 
